@@ -22,7 +22,7 @@ import type { DiffChange, ProductReview } from "@/types";
 
 type ExecuteEvent =
   | { message: string }
-  | { diff: DiffChange[]; productReview?: ProductReview[] }
+  | { diff: DiffChange[]; productReview?: ProductReview[]; currentContent: string }
   | { error: string };
 
 function parseSseEvents(buffer: string) {
@@ -140,10 +140,12 @@ export default function DiffPage() {
     plan,
     diff,
     productReview,
+    mergedContent,
     status,
     liveLog,
     setDiff,
     setProductReview,
+    setMergedContent,
     updateDiffChange,
     setStatus,
     setLiveLog,
@@ -228,6 +230,7 @@ export default function DiffPage() {
             if (event.event === "complete" && "diff" in payload) {
               setDiff(payload.diff);
               setProductReview(payload.productReview ?? []);
+              setMergedContent(payload.currentContent);
               setStatus("reviewing");
               return;
             }
@@ -258,15 +261,34 @@ export default function DiffPage() {
     plan,
     router,
     setDiff,
+    setMergedContent,
     setProductReview,
     setLiveLog,
     setStatus,
   ]);
 
   function handleMergeApprovedChanges() {
-    if (!allChangesActioned) {
+    if (!allChangesActioned || !file || !mergedContent) {
       return;
     }
+
+    // Start from the agent's full output, then revert any rejected hunks back
+    // to their original content so only approved changes land in the download.
+    const rejectedChanges = diff.filter((c) => c.status === "rejected");
+    let content = mergedContent;
+    for (const change of rejectedChanges) {
+      if (change.after) {
+        content = content.replace(change.after, change.before);
+      }
+    }
+
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file.name;
+    a.click();
+    URL.revokeObjectURL(url);
 
     setStatus("done");
     setSuccess(true);

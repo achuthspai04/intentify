@@ -15,6 +15,7 @@ type IntentifyActions = {
   approveAllPlanSteps: () => void;
   setDiff: (diff: DiffChange[]) => void;
   setProductReview: (productReview: ProductReview[]) => void;
+  setMergedContent: (content: string) => void;
   updateDiffChange: (id: string, updates: Partial<DiffChange>) => void;
   setStatus: (status: IntentifyState["status"]) => void;
   setLiveLog: (messages: string[]) => void;
@@ -28,6 +29,7 @@ const initialState: IntentifyState = {
   plan: [],
   diff: [],
   productReview: [],
+  mergedContent: null,
   status: "idle",
   liveLog: [],
 };
@@ -50,6 +52,7 @@ export const useIntentifyStore = create<IntentifyState & IntentifyActions>(
       })),
     setDiff: (diff) => set({ diff }),
     setProductReview: (productReview) => set({ productReview }),
+    setMergedContent: (content) => set({ mergedContent: content }),
     updateDiffChange: (id, updates) =>
       set((state) => ({
         diff: state.diff.map((change) =>

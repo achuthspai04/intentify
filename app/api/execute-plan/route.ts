@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type OpenAI from "openai";
 
+import { computeHunks, type Hunk } from "@/lib/diff";
 import { getOpenAIClient } from "@/lib/openai";
 import {
   DIFF_CLASSIFICATION_PROMPT,
@@ -239,25 +240,35 @@ async function classifyDiff({
   fileName,
   intent,
   approvedStepActions,
-  before,
-  after,
+  hunks,
 }: {
   fileName: string;
   intent: string;
   approvedStepActions: string[];
-  before: string;
-  after: string;
+  hunks: Hunk[];
 }) {
+  if (hunks.length === 0) {
+    return [
+      {
+        id: crypto.randomUUID(),
+        file: fileName,
+        before: "",
+        after: "",
+        category: "unplanned" as const,
+        reason: "The execution completed without changing the uploaded file.",
+        status: "pending" as const,
+      },
+    ];
+  }
+
   const fallback: DiffChange = {
     id: crypto.randomUUID(),
     file: fileName,
-    before,
-    after,
-    category: before === after ? "unplanned" : "planned",
+    before: hunks.map((h) => h.before).join("\n---\n"),
+    after: hunks.map((h) => h.after).join("\n---\n"),
+    category: "planned",
     reason:
-      before === after
-        ? "The execution completed without changing the uploaded file."
-        : "The execution changed the uploaded file in response to the approved plan.",
+      "The execution changed the uploaded file in response to the approved plan.",
     status: "pending",
   };
 
@@ -278,11 +289,12 @@ async function classifyDiff({
         content: JSON.stringify({
           intent,
           approvedSteps: approvedStepActions,
-          diff: {
-            file: fileName,
-            before,
-            after,
-          },
+          file: fileName,
+          hunks: hunks.map((h, i) => ({
+            hunkIndex: i,
+            before: h.before,
+            after: h.after,
+          })),
         }),
       },
     ],
@@ -411,8 +423,7 @@ export async function POST(request: Request) {
             fileName,
             intent,
             approvedStepActions,
-            before: fileContent,
-            after: fileContent,
+            hunks: [],
           });
           send("progress", { message: "Product review running." });
           const productReview = await reviewProductChanges({ intent, diff });
@@ -505,19 +516,19 @@ export async function POST(request: Request) {
 
         send("progress", { message: "Classifying diff." });
 
+        const hunks = computeHunks(fileContent, currentContent);
         const diff = await classifyDiff({
           fileName,
           intent,
           approvedStepActions,
-          before: fileContent,
-          after: currentContent,
+          hunks,
         });
 
         send("progress", { message: "Product review running." });
 
         const productReview = await reviewProductChanges({ intent, diff });
 
-        send("complete", { diff, productReview });
+        send("complete", { diff, productReview, currentContent });
         controller.close();
       } catch (error) {
         console.error("execute-plan failed", error);

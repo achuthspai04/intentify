@@ -33,6 +33,7 @@ If approvedStepActions is empty, make no changes at all.`;
 
 export const DIFF_CLASSIFICATION_PROMPT = `You are an extremely strict code auditor.
 The developer approved ONLY these specific steps: {APPROVED_STEPS}
+You will receive an array of diff hunks extracted from the changed file. Classify each hunk independently and return one JSON entry per hunk.
 CLASSIFICATION RULES:
 - planned: ONLY changes that implement exactly the approved steps. Nothing else.
 - unplanned: ANY change not explicitly in the approved steps - even if logical or helpful. Includes: modifying methods not mentioned, adding imports, refactoring, style changes, adding comments, touching any code outside the approved scope.

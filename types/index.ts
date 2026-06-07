@@ -31,6 +31,7 @@ export type IntentifyState = {
   plan: PlanStep[];
   diff: DiffChange[];
   productReview: ProductReview[];
+  mergedContent: string | null;
   status:
     | "idle"
     | "planning"
