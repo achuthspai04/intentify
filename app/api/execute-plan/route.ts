@@ -428,7 +428,7 @@ export async function POST(request: Request) {
           send("progress", { message: "Product review running." });
           const productReview = await reviewProductChanges({ intent, diff });
 
-          send("complete", { diff, productReview });
+          send("complete", { diff, productReview, currentContent: fileContent });
           controller.close();
           return;
         }

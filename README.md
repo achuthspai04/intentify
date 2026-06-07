@@ -74,7 +74,41 @@ A **Product Insights** panel runs a second Codex pass to flag missing edge cases
 
 ## Screenshots
 
-[Add screenshots here]
+### 1. Intent input — empty state
+
+![Intentify intent input empty state](public/intentify1.png)
+
+### 2. Intent input — file and request ready
+
+![Intentify file upload and developer intent entered](public/intentify2.png)
+
+### 3. Plan approval — generated steps
+
+![Intentify plan approval screen with generated steps](public/intentify3.png)
+
+### 4. Plan approval — approved and rejected steps
+
+![Intentify plan approval screen with approved and rejected steps](public/intentify4.png)
+
+### 5. Diff review — execution feed and classification columns
+
+![Intentify diff review screen with live activity and classified changes](public/intentify5.png)
+
+### 6. Diff review — planned and unplanned change actions
+
+![Intentify diff review cards with approve and reject actions](public/intentify6.png)
+
+### 7. Product insights — second review pass
+
+![Intentify product insights panel with severity cards](public/intentify7.png)
+
+### 8. Verified output — downloaded file
+
+![Intentify verified output file downloaded](public/intentify8.png)
+
+### 9. Merge complete — success state
+
+![Intentify changes merged successfully screen](public/intentify9.png)
 
 ## Recommended Demo Scenario
 

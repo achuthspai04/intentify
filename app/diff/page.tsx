@@ -268,17 +268,29 @@ export default function DiffPage() {
   ]);
 
   function handleMergeApprovedChanges() {
-    if (!allChangesActioned || !file || !mergedContent) {
+    if (!allChangesActioned || !file) {
       return;
     }
 
-    // Start from the agent's full output, then revert any rejected hunks back
-    // to their original content so only approved changes land in the download.
-    const rejectedChanges = diff.filter((c) => c.status === "rejected");
-    let content = mergedContent;
-    for (const change of rejectedChanges) {
-      if (change.after) {
-        content = content.replace(change.after, change.before);
+    let content: string;
+
+    if (mergedContent) {
+      // Start from the agent's full output, revert rejected hunks to original.
+      const rejectedChanges = diff.filter((c) => c.status === "rejected");
+      content = mergedContent;
+      for (const change of rejectedChanges) {
+        if (change.after) {
+          content = content.replace(change.after, change.before);
+        }
+      }
+    } else {
+      // Fallback: apply approved hunks forward onto the original file.
+      const approvedChanges = diff.filter((c) => c.status === "approved");
+      content = file.content;
+      for (const change of approvedChanges) {
+        if (change.before) {
+          content = content.replace(change.before, change.after);
+        }
       }
     }
 
@@ -287,8 +299,10 @@ export default function DiffPage() {
     const a = document.createElement("a");
     a.href = url;
     a.download = file.name;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 100);
 
     setStatus("done");
     setSuccess(true);
